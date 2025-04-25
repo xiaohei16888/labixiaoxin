@@ -32,8 +32,6 @@
   </script>
 </head>
 <body class="bg-gray-100 text-gray-800">
-
-  <!-- 登录界面 -->
   <div id="loginPage" class="min-h-screen flex flex-col items-center justify-center">
     <h1 class="text-3xl font-bold mb-4">蜡笔小新平台登录</h1>
     <input id="username" type="text" placeholder="用户名" class="mb-2 px-4 py-2 border rounded w-64" />
@@ -42,37 +40,29 @@
     <p id="loginError" class="text-red-600 mt-4 hidden">用户名或密码错误</p>
   </div>
 
-  <!-- 主页面 -->
   <div id="mainApp" class="hidden px-4 py-10">
-    <!-- 跑马灯渐变标题 -->
-    <div class="overflow-hidden w-full mb-6">
+    <div class="overflow-hidden w-full mb-4">
       <div class="whitespace-nowrap animate-marquee text-3xl font-bold text-center bg-gradient-to-r from-pink-500 via-yellow-500 to-purple-500 bg-clip-text text-transparent animate-gradient">
         蜡笔小新礼品卡系统
       </div>
     </div>
-
-    <div class="flex justify-end items-center max-w-5xl mx-auto mb-6">
+    <div class="flex items-center justify-between max-w-5xl mx-auto mb-6">
+      <span id="balanceAmount" class="text-lg font-semibold text-green-700">当前余额：¥0.00 元</span>
+      <button onclick="recharge(10)" class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded">模拟充值 +10 元</button>
       <button onclick="logout()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">退出登录</button>
     </div>
 
-    <!-- Nike 模块 -->
     <div class="max-w-5xl mx-auto bg-white rounded shadow-md p-6 mb-10">
       <div class="flex items-center mb-4">
         <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike Logo" class="h-8 mr-3">
         <h2 class="text-2xl font-bold text-blue-600">Nike 批量查询</h2>
       </div>
-      <label for="nikeInput" class="inline-block mb-4 bg-blue-600 text-white px-6 py-2 rounded cursor-pointer hover:bg-blue-700">
-        选择 Nike Excel 文件
-      </label>
+      <label for="nikeInput" class="inline-block mb-4 bg-blue-600 text-white px-6 py-2 rounded cursor-pointer hover:bg-blue-700">选择 Nike Excel 文件</label>
       <input type="file" id="nikeInput" accept=".xlsx" style="display: none;" />
       <div id="nikeOutput" class="hidden mt-4">
         <table class="min-w-full border mb-4">
           <thead class="bg-gray-200 text-left">
-            <tr>
-              <th class="border px-4 py-2">卡号</th>
-              <th class="border px-4 py-2">PIN</th>
-              <th class="border px-4 py-2">模拟余额</th>
-            </tr>
+            <tr><th class="border px-4 py-2">卡号</th><th class="border px-4 py-2">PIN</th><th class="border px-4 py-2">模拟余额</th></tr>
           </thead>
           <tbody id="nikeTableBody"></tbody>
         </table>
@@ -80,24 +70,17 @@
       </div>
     </div>
 
-    <!-- Target 模块 -->
     <div class="max-w-5xl mx-auto bg-white rounded shadow-md p-6">
       <div class="flex items-center mb-4">
         <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Target_logo.svg" alt="Target Logo" class="h-8 mr-3">
         <h2 class="text-2xl font-bold text-red-600">Target 批量查询</h2>
       </div>
-      <label for="targetInput" class="inline-block mb-4 bg-red-600 text-white px-6 py-2 rounded cursor-pointer hover:bg-red-700">
-        选择 Target Excel 文件
-      </label>
+      <label for="targetInput" class="inline-block mb-4 bg-red-600 text-white px-6 py-2 rounded cursor-pointer hover:bg-red-700">选择 Target Excel 文件</label>
       <input type="file" id="targetInput" accept=".xlsx" style="display: none;" />
       <div id="targetOutput" class="hidden mt-4">
         <table class="min-w-full border mb-4">
           <thead class="bg-gray-200 text-left">
-            <tr>
-              <th class="border px-4 py-2">卡号</th>
-              <th class="border px-4 py-2">PIN</th>
-              <th class="border px-4 py-2">模拟余额</th>
-            </tr>
+            <tr><th class="border px-4 py-2">卡号</th><th class="border px-4 py-2">PIN</th><th class="border px-4 py-2">模拟余额</th></tr>
           </thead>
           <tbody id="targetTableBody"></tbody>
         </table>
@@ -115,6 +98,8 @@
       { username: 'test5', password: '123456' },
     ];
 
+    let balance = 0;
+
     function login() {
       const user = document.getElementById('username').value;
       const pass = document.getElementById('password').value;
@@ -123,7 +108,7 @@
         localStorage.setItem('login', 'yes');
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
-        document.getElementById('loginError').classList.add('hidden');
+        updateBalanceUI();
       } else {
         document.getElementById('loginError').classList.remove('hidden');
       }
@@ -138,6 +123,7 @@
       if (localStorage.getItem('login') === 'yes') {
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
+        updateBalanceUI();
       }
     };
 
@@ -145,22 +131,31 @@
     const targetData = [["卡号", "PIN", "模拟余额"]];
 
     document.getElementById('nikeInput').addEventListener('change', function(e) {
-      parseExcel(e.target.files[0], "nike");
+      handleUpload(e.target.files[0], 'nike');
     });
 
     document.getElementById('targetInput').addEventListener('change', function(e) {
-      parseExcel(e.target.files[0], "target");
+      handleUpload(e.target.files[0], 'target');
     });
 
-    function parseExcel(file, brand) {
+    function handleUpload(file, brand) {
       const reader = new FileReader();
       reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
         if (rows.length < 2) return;
+
+        const rowsToQuery = rows.slice(1).filter(row => row[0] && row[1]);
+        const cost = rowsToQuery.length * 0.9;
+        if (balance < cost) {
+          alert(`余额不足，当前余额 ¥${balance.toFixed(2)}，需要 ¥${cost.toFixed(2)} 才能查询`);
+          return;
+        }
+
+        balance -= cost;
+        updateBalanceUI();
 
         const body = document.getElementById(brand + "TableBody");
         body.innerHTML = "";
@@ -170,17 +165,16 @@
         const store = brand === "nike" ? nikeData : targetData;
         store.length = 1;
 
-        rows.slice(1).forEach(row => {
-          const card = row[0]?.toString().trim();
-          const pin = row[1]?.toString().trim();
-          if (!card || !pin) return;
-          const balance = brand === "nike"
+        rowsToQuery.forEach(row => {
+          const card = row[0].toString().trim();
+          const pin = row[1].toString().trim();
+          const balanceValue = brand === "nike"
             ? `$${Math.floor(Math.random() * 400 + 50)}`
             : `$${Math.floor(Math.random() * 300 + 20)}`;
-          store.push([card, pin, balance]);
+          store.push([card, pin, balanceValue]);
 
           const tr = document.createElement("tr");
-          [card, pin, balance].forEach(text => {
+          [card, pin, balanceValue].forEach(text => {
             const td = document.createElement("td");
             td.className = "border px-4 py-2";
             td.innerText = text;
@@ -204,6 +198,16 @@
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Target查询结果");
       XLSX.writeFile(wb, "Target_导出结果.xlsx");
+    }
+
+    function recharge(amount) {
+      balance += amount;
+      updateBalanceUI();
+    }
+
+    function updateBalanceUI() {
+      const el = document.getElementById("balanceAmount");
+      if (el) el.innerText = `当前余额：¥${balance.toFixed(2)} 元`;
     }
   </script>
 </body>
