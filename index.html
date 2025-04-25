@@ -8,15 +8,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
-  <div class="min-h-screen flex flex-col items-center justify-center px-4">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4 py-10">
     <h1 class="text-4xl font-bold mb-4">蜡笔小新礼品卡平台</h1>
-    <p class="mb-6 text-lg">请上传包含卡密的 Excel 文件，系统将自动解析并展示</p>
+    <p class="mb-6 text-lg">上传包含卡号和PIN的 Excel 文件，系统将解析并支持导出</p>
 
     <input type="file" id="fileInput" accept=".xlsx" class="mb-4" />
 
     <div id="output" class="w-full max-w-3xl bg-white shadow-md rounded p-4 hidden">
       <h2 class="text-2xl font-semibold mb-4">上传内容预览：</h2>
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto mb-4">
         <table class="min-w-full border">
           <thead class="bg-gray-200 text-left">
             <tr id="tableHeader"></tr>
@@ -24,10 +24,15 @@
           <tbody id="tableBody" class="bg-white"></tbody>
         </table>
       </div>
+      <button id="exportBtn" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+        导出为 Excel
+      </button>
     </div>
   </div>
 
   <script>
+    let uploadedData = [];
+
     document.getElementById('fileInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       const reader = new FileReader();
@@ -39,7 +44,8 @@
 
         if (json.length === 0) return;
 
-        // 显示表头
+        uploadedData = json;
+
         const header = document.getElementById("tableHeader");
         header.innerHTML = "";
         json[0].forEach(col => {
@@ -49,7 +55,6 @@
           header.appendChild(th);
         });
 
-        // 显示表格内容
         const body = document.getElementById("tableBody");
         body.innerHTML = "";
         json.slice(1).forEach(row => {
@@ -63,10 +68,4 @@
           body.appendChild(tr);
         });
 
-        document.getElementById("output").classList.remove("hidden");
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  </script>
-</body>
-</html>
+        document.get
