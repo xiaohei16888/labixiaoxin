@@ -5,7 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>蜡笔小新礼品卡系统</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            marquee: 'marquee 10s linear infinite',
+            gradient: 'gradient 6s ease infinite',
+          },
+          keyframes: {
+            marquee: {
+              '0%': { transform: 'translateX(100%)' },
+              '100%': { transform: 'translateX(-100%)' },
+            },
+            gradient: {
+              '0%, 100%': { 'background-position': '0% 50%' },
+              '50%': { 'background-position': '100% 50%' },
+            },
+          },
+          backgroundSize: {
+            'gradient': '200% 200%',
+          }
+        }
+      }
+    }
+  </script>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
@@ -20,8 +44,14 @@
 
   <!-- 主页面 -->
   <div id="mainApp" class="hidden px-4 py-10">
-    <div class="flex justify-between items-center mb-6 max-w-5xl mx-auto">
-      <h1 class="text-3xl font-bold">蜡笔小新礼品卡系统</h1>
+    <!-- 跑马灯渐变标题 -->
+    <div class="overflow-hidden w-full mb-6">
+      <div class="whitespace-nowrap animate-marquee text-3xl font-bold text-center bg-gradient-to-r from-pink-500 via-yellow-500 to-purple-500 bg-clip-text text-transparent animate-gradient">
+        蜡笔小新礼品卡系统
+      </div>
+    </div>
+
+    <div class="flex justify-end items-center max-w-5xl mx-auto mb-6">
       <button onclick="logout()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">退出登录</button>
     </div>
 
