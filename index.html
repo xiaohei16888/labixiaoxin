@@ -26,8 +26,11 @@
     </div>
 
     <div class="max-w-4xl mx-auto">
-      <p class="mb-6 text-lg">上传包含卡号和PIN的 Excel 文件，系统将解析、生成模拟余额并支持导出</p>
-      <input type="file" id="fileInput" accept=".xlsx" class="mb-4" />
+      <p class="mb-4 text-lg">上传包含卡号和PIN的 Excel 文件，系统将解析、生成模拟余额并支持导出</p>
+      <label for="fileInput" class="inline-block mb-4 bg-blue-600 text-white px-6 py-2 rounded cursor-pointer hover:bg-blue-700">
+        选择 Excel 文件
+      </label>
+      <input type="file" id="fileInput" accept=".xlsx" style="display: none;" />
     </div>
 
     <div id="output" class="w-full max-w-4xl bg-white shadow-md rounded p-4 mx-auto hidden">
@@ -65,7 +68,6 @@
     </div>
   </div>
 
-  <!-- 脚本区 -->
   <script>
     const users = [
       { username: 'test1', password: '123456' },
