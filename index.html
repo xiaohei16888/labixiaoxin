@@ -10,11 +10,11 @@
 <body class="bg-gray-100 text-gray-800">
   <div class="min-h-screen flex flex-col items-center justify-center px-4 py-10">
     <h1 class="text-4xl font-bold mb-4">蜡笔小新礼品卡平台</h1>
-    <p class="mb-6 text-lg">上传包含卡号和PIN的 Excel 文件，系统将解析并支持导出</p>
+    <p class="mb-6 text-lg">上传包含卡号和PIN的 Excel 文件，系统将解析、生成模拟余额并支持导出</p>
 
     <input type="file" id="fileInput" accept=".xlsx" class="mb-4" />
 
-    <div id="output" class="w-full max-w-3xl bg-white shadow-md rounded p-4 hidden">
+    <div id="output" class="w-full max-w-4xl bg-white shadow-md rounded p-4 hidden">
       <h2 class="text-2xl font-semibold mb-4">上传内容预览：</h2>
       <div class="overflow-x-auto mb-4">
         <table class="min-w-full border">
@@ -44,20 +44,30 @@
 
         if (json.length === 0) return;
 
-        uploadedData = json;
+        // 添加“余额”列名
+        const newHeader = [...json[0], "模拟余额"];
+        uploadedData = [newHeader];
 
+        const bodyRows = json.slice(1).map(row => {
+          const balance = `$${Math.floor(Math.random() * 490) + 10}`;
+          uploadedData.push([...row, balance]);
+          return [...row, balance];
+        });
+
+        // 表头渲染
         const header = document.getElementById("tableHeader");
         header.innerHTML = "";
-        json[0].forEach(col => {
+        newHeader.forEach(col => {
           const th = document.createElement("th");
           th.className = "border px-4 py-2";
           th.innerText = col;
           header.appendChild(th);
         });
 
+        // 内容渲染
         const body = document.getElementById("tableBody");
         body.innerHTML = "";
-        json.slice(1).forEach(row => {
+        bodyRows.forEach(row => {
           const tr = document.createElement("tr");
           row.forEach(cell => {
             const td = document.createElement("td");
@@ -68,4 +78,14 @@
           body.appendChild(tr);
         });
 
-        document.get
+        document.getElementById("output").classList.remove("hidden");
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function () {
+      const ws = XLSX.utils.aoa_to_sheet(uploadedData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "导出结果");
+      XLSX.writeFile(wb, "蜡笔小新导出结果.xlsx");
+
