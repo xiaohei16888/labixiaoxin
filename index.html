@@ -5,19 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>蜡笔小新礼品卡平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
-  <div class="min-h-screen flex flex-col items-center justify-center">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4">
     <h1 class="text-4xl font-bold mb-4">蜡笔小新礼品卡平台</h1>
-    <p class="mb-8 text-lg">欢迎使用本系统，您可以上传 Excel 查询卡密余额并导出结果</p>
-    <div class="flex space-x-4">
-      <button class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700" onclick="alert('上传功能开发中')">
-        上传 Excel 文件
-      </button>
-      <button class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700" onclick="alert('导出功能开发中')">
-        导出查询结果
-      </button>
+    <p class="mb-6 text-lg">请上传包含卡密的 Excel 文件，系统将自动解析并展示</p>
+
+    <input type="file" id="fileInput" accept=".xlsx" class="mb-4" />
+
+    <div id="output" class="w-full max-w-3xl bg-white shadow-md rounded p-4 hidden">
+      <h2 class="text-2xl font-semibold mb-4">上传内容预览：</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border">
+          <thead class="bg-gray-200 text-left">
+            <tr id="tableHeader"></tr>
+          </thead>
+          <tbody id="tableBody" class="bg-white"></tbody>
+        </table>
+      </div>
     </div>
   </div>
+
+  <script>
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        if (json.length === 0) return;
+
+        // 显示表头
+        const header = document.getElementById("tableHeader");
+        header.innerHTML = "";
+        json[0].forEach(col => {
+          const th = document.createElement("th");
+          th.className = "border px-4 py-2";
+          th.innerText = col;
+          header.appendChild(th);
+        });
+
+        // 显示表格内容
+        const body = document.getElementById("tableBody");
+        body.innerHTML = "";
+        json.slice(1).forEach(row => {
+          const tr = document.createElement("tr");
+          row.forEach(cell => {
+            const td = document.createElement("td");
+            td.className = "border px-4 py-2";
+            td.innerText = cell ?? "";
+            tr.appendChild(td);
+          });
+          body.appendChild(tr);
+        });
+
+        document.getElementById("output").classList.remove("hidden");
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  </script>
 </body>
 </html>
