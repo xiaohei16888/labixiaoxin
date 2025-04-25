@@ -1,53 +1,6 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>蜡笔小新礼品卡平台</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body class="bg-gray-100 text-gray-800">
-
-  <!-- 登录界面 -->
-  <div id="loginPage" class="min-h-screen flex flex-col items-center justify-center">
-    <h1 class="text-3xl font-bold mb-4">蜡笔小新平台登录</h1>
-    <input id="username" type="text" placeholder="用户名" class="mb-2 px-4 py-2 border rounded w-64" />
-    <input id="password" type="password" placeholder="密码" class="mb-4 px-4 py-2 border rounded w-64" />
-    <button onclick="login()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">登录</button>
-    <p id="loginError" class="text-red-600 mt-4 hidden">用户名或密码错误</p>
-  </div>
-
-  <!-- 系统主界面 -->
-  <div id="mainApp" class="hidden px-4 py-10">
-    <div class="flex justify-between items-center mb-6 max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold">蜡笔小新礼品卡平台</h1>
-      <button onclick="logout()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">退出登录</button>
-    </div>
-
-    <div class="max-w-4xl mx-auto">
-      <p class="mb-6 text-lg">上传包含卡号和PIN的 Excel 文件，系统将解析、生成模拟余额并支持导出</p>
-      <input type="file" id="fileInput" accept=".xlsx" class="mb-4" />
-    </div>
-
-    <div id="output" class="w-full max-w-4xl bg-white shadow-md rounded p-4 mx-auto hidden">
-      <h2 class="text-2xl font-semibold mb-4">上传内容预览：</h2>
-      <div class="overflow-x-auto mb-4">
-        <table class="min-w-full border">
-          <thead class="bg-gray-200 text-left">
-            <tr id="tableHeader"></tr>
-          </thead>
-          <tbody id="tableBody" class="bg-white"></tbody>
-        </table>
-      </div>
-      <button id="exportBtn" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-        导出为 Excel
-      </button>
-    </div>
   </div>
 
   <script>
-    // 默认测试账号
     const users = [
       { username: 'test1', password: '123456' },
       { username: 'test2', password: '123456' },
@@ -136,7 +89,146 @@
       XLSX.utils.book_append_sheet(wb, ws, "导出结果");
       XLSX.writeFile(wb, "蜡笔小新导出结果.xlsx");
     });
+
+    function checkNike() {
+      const card = document.getElementById("nikeCard").value.trim();
+      const pin = document.getElementById("nikePin").value.trim();
+      if (!card || !pin) {
+        document.getElementById("nikeResult").innerText = "请输入卡号和PIN";
+        return;
+      }
+      const fakeBalance = `$${Math.floor(Math.random() * 400 + 50)}`;
+      document.getElementById("nikeResult").innerText = `查询成功，余额：${fakeBalance}`;
+    }
+
+    function checkTarget() {
+      const card = document.getElementById("targetCard").value.trim();
+      const pin = document.getElementById("targetPin").value.trim();
+      if (!card || !pin) {
+        document.getElementById("targetResult").innerText = "请输入卡号和PIN";
+        return;
+      }
+      const fakeBalance = `$${Math.floor(Math.random() * 300 + 20)}`;
+      document.getElementById("targetResult").innerText = `查询成功，余额：${fakeBalance}`;
+    }
   </script>
 </body>
 </html>
+  </div>
+
+  <script>
+    const users = [
+      { username: 'test1', password: '123456' },
+      { username: 'test2', password: '123456' },
+      { username: 'test3', password: '123456' },
+      { username: 'test4', password: '123456' },
+      { username: 'test5', password: '123456' },
+    ];
+
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      const valid = users.some(u => u.username === user && u.password === pass);
+      if (valid) {
+        localStorage.setItem('login', 'yes');
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        document.getElementById('loginError').classList.add('hidden');
+      } else {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('login');
+      location.reload();
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem('login') === 'yes') {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+      }
+    };
+
+    // 上传 + 导出功能
+    let uploadedData = [];
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        if (json.length === 0) return;
+
+        const newHeader = [...json[0], "模拟余额"];
+        uploadedData = [newHeader];
+        const bodyRows = json.slice(1).map(row => {
+          const balance = `$${Math.floor(Math.random() * 490) + 10}`;
+          uploadedData.push([...row, balance]);
+          return [...row, balance];
+        });
+
+        const header = document.getElementById("tableHeader");
+        header.innerHTML = "";
+        newHeader.forEach(col => {
+          const th = document.createElement("th");
+          th.className = "border px-4 py-2";
+          th.innerText = col;
+          header.appendChild(th);
+        });
+
+        const body = document.getElementById("tableBody");
+        body.innerHTML = "";
+        bodyRows.forEach(row => {
+          const tr = document.createElement("tr");
+          row.forEach(cell => {
+            const td = document.createElement("td");
+            td.className = "border px-4 py-2";
+            td.innerText = cell ?? "";
+            tr.appendChild(td);
+          });
+          body.appendChild(tr);
+        });
+
+        document.getElementById("output").classList.remove("hidden");
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function () {
+      const ws = XLSX.utils.aoa_to_sheet(uploadedData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "导出结果");
+      XLSX.writeFile(wb, "蜡笔小新导出结果.xlsx");
+    });
+
+    function checkNike() {
+      const card = document.getElementById("nikeCard").value.trim();
+      const pin = document.getElementById("nikePin").value.trim();
+      if (!card || !pin) {
+        document.getElementById("nikeResult").innerText = "请输入卡号和PIN";
+        return;
+      }
+      const fakeBalance = `$${Math.floor(Math.random() * 400 + 50)}`;
+      document.getElementById("nikeResult").innerText = `查询成功，余额：${fakeBalance}`;
+    }
+
+    function checkTarget() {
+      const card = document.getElementById("targetCard").value.trim();
+      const pin = document.getElementById("targetPin").value.trim();
+      if (!card || !pin) {
+        document.getElementById("targetResult").innerText = "请输入卡号和PIN";
+        return;
+      }
+      const fakeBalance = `$${Math.floor(Math.random() * 300 + 20)}`;
+      document.getElementById("targetResult").innerText = `查询成功，余额：${fakeBalance}`;
+    }
+  </script>
+</body>
+</html>
+
 
